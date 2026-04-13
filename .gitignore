@@ -17,3 +17,6 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Local-only publish helper (never ship)
+commit.py

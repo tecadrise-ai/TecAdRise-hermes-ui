@@ -26,15 +26,15 @@ uvicorn server:app --host 0.0.0.0 --port 9090
 
 Open `http://localhost:9090`. Set `HERMES_HOME` if your profiles live outside `~/.hermes`.
 
-## Publish to GitHub (local)
+## Contributing / pushing changes
 
-Requires [GitHub CLI](https://cli.github.com/) (`gh`) authenticated once (`gh auth login`).
+Use normal Git against your fork or a remote you control, for example:
 
 ```bash
-python commit.py -m "feat: initial public release"
+git add -A
+git commit -m "your message"
+git push origin main
 ```
-
-Default new repo name: **TecAdRise-hermes-ui** (public). Override with `--repo-name` or `--description`.
 
 ## Credits
 
