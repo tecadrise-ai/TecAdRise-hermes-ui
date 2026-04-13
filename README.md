@@ -1,5 +1,7 @@
 # TecAdRise Hermes minimal UI
 
+Source: [https://github.com/tecadrise-ai/TecAdRise-hermes-ui](https://github.com/tecadrise-ai/TecAdRise-hermes-ui)
+
 Minimal **browser shell** for Hermes-style CLI chat: multi-profile tabs, session resume, editable profile files, **skills** picker (category or leaf folders under `HERMES_HOME/profiles/<profile>/skills/`), file uploads into `uploads/`, optional **scheduled jobs**, and a live CLI hint line.
 
 ![Hermes minimal UI screenshot](docs/TecAdRise-hermes-ui.png)
