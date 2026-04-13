@@ -1,0 +1,15 @@
+# Rebuild after code changes: docker compose up -d --build
+# Map your real Hermes data (same as HERMES_HOME in the container):
+#   set HERMES_HOST_PATH=C:\path\to\hermes-data   (PowerShell)
+#   or export HERMES_HOST_PATH=/path/to/.hermes   (bash)
+services:
+  hermes-minimal-ui:
+    build: .
+    ports:
+      - "9090:8000"
+    environment:
+      HERMES_HOME: /root/.hermes
+    volumes:
+      - type: bind
+        source: ${HERMES_HOST_PATH:-./hermes-data}
+        target: /root/.hermes

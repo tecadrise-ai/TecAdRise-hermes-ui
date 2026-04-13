@@ -1,0 +1,1 @@
+wsl -u root -e sh -lc "fuser -k 9090/tcp 2>/dev/null; sleep 1; cd /mnt/c/TecAdRise/projects-git/hermes-minimal-ui && .venv/bin/python -m uvicorn server:app --host 0.0.0.0 --port 9090"

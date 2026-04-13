@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hermes minimal UI</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="pane">
+        <div class="pane-header">Profile / memory</div>
+        <div class="pane-body">
+          <div class="profile-files-section">
+            <div class="profile-files-heading">Profile files</div>
+            <ul class="profile-files-list" id="profile-files-list" aria-label="Profile files for active tab"></ul>
+          </div>
+          <div class="sessions-section">
+            <div class="profile-files-heading">Sessions</div>
+            <label class="sessions-label" for="session-select">Hermes CLI session</label>
+            <select id="session-select" class="session-select" aria-label="Resume Hermes session" disabled>
+              <option value="">New</option>
+            </select>
+            <p class="session-hint" id="session-hint" hidden></p>
+          </div>
+          <div class="skills-section">
+            <div class="profile-files-heading">Skills</div>
+            <div
+              id="skills-cascade"
+              class="skills-cascade is-locked"
+              aria-label="Profile skills"
+            >
+              <div class="skills-cascade-pane skills-cascade-pane--categories">
+                <div
+                  id="skill-category-list"
+                  class="skills-cascade-list"
+                  role="listbox"
+                  aria-label="Skill categories"
+                ></div>
+              </div>
+              <div
+                class="skills-cascade-pane skills-cascade-pane--skills"
+                id="skill-skills-pane"
+              >
+                <div
+                  id="skill-name-list"
+                  class="skills-cascade-list"
+                  role="listbox"
+                  aria-label="Skills in category"
+                ></div>
+              </div>
+            </div>
+            <p class="session-hint" id="skill-hint" hidden></p>
+          </div>
+        </div>
+      </aside>
+
+      <main class="pane pane-center">
+        <div class="profile-tabs-wrap" id="profile-tabs-wrap">
+          <div
+            class="profile-tabs"
+            id="profile-tabs"
+            role="tablist"
+            aria-label="Hermes profiles"
+          ></div>
+        </div>
+        <div class="messages" id="messages" role="tabpanel" aria-label="Chat messages"></div>
+        <div class="composer">
+          <div class="composer-row">
+            <div class="composer-field-wrap">
+              <textarea id="composer-input" rows="2" placeholder="Message… (Enter to send, Shift+Enter for newline)" autofocus></textarea>
+              <button
+                type="button"
+                class="icon-btn composer-attach-btn"
+                id="btn-composer-attach"
+                title="Attach file (saved under profile/uploads, path added to message)"
+                aria-label="Attach file"
+                disabled
+              >
+                <svg class="icon-attach" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+                  <path
+                    d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+            <button type="button" id="send-btn" disabled>Send</button>
+          </div>
+          <input type="file" id="composer-file-input" class="hidden" tabindex="-1" aria-hidden="true" />
+          <p class="composer-cli-line" id="composer-cli-line" aria-live="polite"></p>
+        </div>
+      </main>
+
+      <aside class="pane pane-right">
+        <div class="pane-header pane-header-row">
+          <span class="pane-header-title">Workspace</span>
+          <button
+            type="button"
+            class="icon-btn"
+            id="btn-cron-toggle"
+            title="Scheduled jobs"
+            aria-label="Scheduled jobs"
+            aria-pressed="false"
+          >
+            <svg class="icon-cron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.75" />
+              <path
+                d="M12 7v5l3 2"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="pane-body" id="workspace-panel"></div>
+        <div class="pane-body cron-panel is-hidden" id="cron-panel" aria-hidden="true">
+          <p class="cron-intro">
+            When a job runs, the server runs the same <code>hermes chat -q</code> as Send. Open the job’s <strong>profile tab</strong> in the center column to see the turn in the main chat.
+          </p>
+          <div class="cron-toolbar">
+            <button type="button" class="btn-cron-add" id="btn-cron-open-modal">Add job</button>
+          </div>
+          <div class="cron-list-head">Jobs</div>
+          <div id="cron-job-list" class="cron-job-list"></div>
+        </div>
+        <div class="pane-right-settings-bar">
+          <p class="pane-right-settings-credit">
+            Powered by:
+            <a
+              href="https://tecadrise.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              >https://tecadrise.ai</a>
+          </p>
+          <button
+            type="button"
+            class="icon-btn"
+            id="btn-ui-config"
+            title="UI server config.toml"
+            aria-label="Edit UI server config.toml"
+          >
+            <svg class="icon-gear" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+              <path
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              />
+              <path
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+          </button>
+        </div>
+      </aside>
+    </div>
+
+    <div
+      id="cron-job-modal"
+      class="cron-modal-overlay is-hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cron-modal-title"
+      aria-hidden="true"
+    >
+      <div class="cron-modal-panel">
+      <form class="schedule-dialog" id="cron-modal-form">
+        <h2 class="cron-modal-title" id="cron-modal-title">Add job</h2>
+        <div>
+          <label class="block" for="modal-cron-name">Name</label>
+          <input type="text" id="modal-cron-name" name="name" required maxlength="120" placeholder="Daily summary" />
+        </div>
+        <div>
+          <label class="block" for="modal-cron-profile">Profile</label>
+          <select id="modal-cron-profile" name="profile" required></select>
+        </div>
+        <div>
+          <label class="block" for="modal-cron-prompt">Prompt (sent as chat message)</label>
+          <textarea id="modal-cron-prompt" name="prompt" rows="3" required placeholder="What the agent should do when this job runs…"></textarea>
+        </div>
+        <div>
+          <label class="block" for="chat-schedule-type">Schedule type</label>
+          <select id="chat-schedule-type">
+            <option value="interval">Interval (every X time)</option>
+            <option value="daily">Daily (specific time)</option>
+            <option value="weekly">Weekly (day and time)</option>
+            <option value="once">Once (date and time)</option>
+            <option value="cron">Custom cron</option>
+          </select>
+        </div>
+        <div id="chat-ui-interval" class="chat-schedule-ui schedule-ui-grid">
+          <div>
+            <label class="block" for="chat-interval-val">Every</label>
+            <input type="number" id="chat-interval-val" min="1" value="15" />
+          </div>
+          <div>
+            <label class="block" for="chat-interval-unit">Unit</label>
+            <select id="chat-interval-unit">
+              <option value="m" selected>Minutes</option>
+              <option value="h">Hours</option>
+              <option value="d">Days</option>
+            </select>
+          </div>
+        </div>
+        <div id="chat-ui-daily" class="chat-schedule-ui hidden">
+          <label class="block" for="chat-daily-time">Time</label>
+          <input type="time" id="chat-daily-time" value="08:30" />
+        </div>
+        <div id="chat-ui-weekly" class="chat-schedule-ui schedule-ui-grid hidden">
+          <div>
+            <label class="block" for="chat-weekly-day">Day of week</label>
+            <select id="chat-weekly-day">
+              <option value="1">Monday</option>
+              <option value="2">Tuesday</option>
+              <option value="3">Wednesday</option>
+              <option value="4">Thursday</option>
+              <option value="5">Friday</option>
+              <option value="6">Saturday</option>
+              <option value="0">Sunday</option>
+            </select>
+          </div>
+          <div>
+            <label class="block" for="chat-weekly-time">Time</label>
+            <input type="time" id="chat-weekly-time" value="09:00" />
+          </div>
+        </div>
+        <div id="chat-ui-once" class="chat-schedule-ui hidden">
+          <label class="block" for="chat-once-datetime">Date and time</label>
+          <input type="datetime-local" id="chat-once-datetime" />
+        </div>
+        <div id="chat-ui-cron" class="chat-schedule-ui hidden">
+          <label class="block" for="chat-cron-expr">Cron expression</label>
+          <input type="text" id="chat-cron-expr" placeholder="* * * * *" autocomplete="off" />
+          <p class="cron-hint">Format: minute hour day month day-of-week</p>
+        </div>
+        <div class="schedule-dialog-footer">
+          <button type="button" class="secondary" id="scheduleCancel">Cancel</button>
+          <button type="submit" id="scheduleSave">Save schedule</button>
+        </div>
+      </form>
+      </div>
+    </div>
+
+    <div
+      id="profile-file-modal"
+      class="cron-modal-overlay is-hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="profile-file-modal-title"
+      aria-hidden="true"
+    >
+      <div class="cron-modal-panel profile-file-modal-panel">
+        <div class="profile-file-modal-header">
+          <h2 class="profile-file-modal-title" id="profile-file-modal-title">File</h2>
+          <button
+            type="button"
+            class="profile-file-modal-close"
+            id="profile-file-modal-close"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+        <div class="profile-file-modal-body">
+          <p class="profile-file-modal-hint" id="profile-file-modal-hint"></p>
+          <textarea
+            id="profile-file-editor"
+            class="profile-file-editor"
+            spellcheck="false"
+            aria-label="File content"
+            placeholder=""
+          ></textarea>
+          <p class="profile-file-modal-status" id="profile-file-modal-status" aria-live="polite"></p>
+          <div class="schedule-dialog-footer profile-file-modal-footer">
+            <button type="button" class="secondary" id="profile-file-cancel">Cancel</button>
+            <button type="button" id="profile-file-save">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="attach-modal"
+      class="cron-modal-overlay is-hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="attach-modal-title"
+      aria-hidden="true"
+    >
+      <div class="cron-modal-panel attach-modal-panel">
+        <h2 class="attach-modal-title" id="attach-modal-title">Attach file</h2>
+        <p class="attach-modal-filename" id="attach-modal-filename"></p>
+        <p class="attach-modal-hint">
+          Upload copies the file to <code>profiles/&lt;profile&gt;/uploads/</code> on the server. The absolute path is appended to your message for Hermes tools (e.g. Read).
+        </p>
+        <p class="attach-modal-status is-error" id="attach-modal-status" hidden></p>
+        <div class="attach-modal-actions">
+          <button type="button" class="secondary" id="attach-modal-cancel">Cancel</button>
+          <button type="button" id="attach-modal-upload">Upload</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,23 @@
+# Hermes minimal UI – optional settings. Restart the server after editing.
+# If an environment variable is set (non-empty where noted), it overrides this file.
+
+[hermes]
+# Extra arguments after the quoted message (same idea as HERMES_CHAT_EXTRA_ARGS).
+extra_args = ""
+
+# If false, the -Q (quiet) flag is not added (same idea as HERMES_CHAT_NO_QUIET=1).
+use_quiet = true
+
+# If false, the server does not strip the Hermes banner/footer from stdout (same as HERMES_UI_RAW_OUTPUT=1).
+strip_cli_output = true
+
+# Subprocess timeout in seconds (overridden by HERMES_CHAT_TIMEOUT_SEC if set).
+timeout_sec = 600
+
+# Editable files per profile (paths are HERMES_HOME/profiles/<profile>/<name>).
+profile_files = ["SOUL.md", "config.yaml",".env"]
+
+[ui]
+# Shown under the composer (plain text).
+cli_caption = "CLI"
+cli_hint = "Tune in this file or with HERMES_* env vars; restart after editing config.toml."
