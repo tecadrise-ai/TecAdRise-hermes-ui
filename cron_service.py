@@ -138,6 +138,31 @@ def list_jobs() -> list[dict[str, Any]]:
     return out
 
 
+def attach_next_run_times(jobs: list[dict[str, Any]]) -> None:
+    """Set next_run_at (unix seconds) from APScheduler for each job. Caller must have started the scheduler."""
+    sch = _scheduler
+    if sch is None:
+        for j in jobs:
+            j["next_run_at"] = None
+        return
+    for j in jobs:
+        jid = _norm_job_id(j.get("id"))
+        nxt: float | None = None
+        if jid:
+            try:
+                aj = sch.get_job(f"cron_{jid}")
+            except Exception:
+                aj = None
+            if aj is not None:
+                nrt = aj.next_run_time
+                if nrt is not None:
+                    try:
+                        nxt = float(nrt.timestamp())
+                    except Exception:
+                        nxt = None
+        j["next_run_at"] = nxt
+
+
 def _find_job(jobs: list[dict], job_id: str | Any) -> dict | None:
     want = _norm_job_id(job_id)
     if not want:

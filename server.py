@@ -456,9 +456,13 @@ def api_chat(body: ChatRequest):
 def api_crons_list():
     cron_service.ensure_scheduler_started()
     jobs = cron_service.list_jobs()
+    cron_service.attach_next_run_times(jobs)
     for j in jobs:
         if j.get("last_run_at"):
             j["last_run_at"] = float(j["last_run_at"])
+        nra = j.get("next_run_at")
+        if nra is not None:
+            j["next_run_at"] = float(nra)
     return {"jobs": jobs}
 
 

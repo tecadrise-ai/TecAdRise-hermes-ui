@@ -739,6 +739,23 @@ code.path {
   border-top: 1px solid var(--border);
 }
 
+.skills-more-link-wrap {
+  margin: 3px 0 0;
+  text-align: left;
+  margin-left: 3px;
+}
+
+.skills-more-link {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.skills-more-link:hover {
+  text-decoration: underline;
+}
+
 .skills-cascade {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -1151,9 +1168,21 @@ code.path {
 }
 
 .cron-job-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   font-size: 11px;
   color: var(--muted);
   margin-bottom: 6px;
+}
+
+.cron-job-meta-primary {
+  color: var(--muted);
+}
+
+.cron-job-meta-last,
+.cron-job-meta-next {
+  color: var(--muted);
 }
 
 .cron-job-actions {

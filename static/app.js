@@ -1489,7 +1489,11 @@
         '<span class="cron-job-name"></span>' +
         '<span class="badge"></span>' +
         "</div>" +
-        '<div class="cron-job-meta"></div>' +
+        '<div class="cron-job-meta">' +
+        '<div class="cron-job-meta-primary"></div>' +
+        '<div class="cron-job-meta-last"></div>' +
+        '<div class="cron-job-meta-next"></div>' +
+        "</div>" +
         '<p class="cron-job-hint"></p>' +
         '<div class="cron-job-actions">' +
         '<button type="button" class="btn-run">Run now</button>' +
@@ -1501,16 +1505,23 @@
       const badge = card.querySelector(".badge");
       badge.textContent = en ? "on" : "off";
       badge.className = "badge " + (en ? "badge-on" : "badge-off");
-      card.querySelector(".cron-job-meta").textContent =
-        "Profile: " +
-        (j.profile || "?") +
-        " · " +
-        formatScheduleDisplay(j.schedule) +
-        " · last run: " +
-        formatTime(j.last_run_at);
-      const prof = j.profile || "?";
-      card.querySelector(".cron-job-hint").textContent =
-        'Agent replies show in the main chat when you open the "' + prof + '" tab (same as a manual Send).';
+      card.querySelector(".cron-job-meta-primary").textContent =
+        "Profile: " + (j.profile || "?") + " · " + formatScheduleDisplay(j.schedule);
+      card.querySelector(".cron-job-meta-last").textContent =
+        "last run: " + formatTime(j.last_run_at);
+      const nextTxt =
+        j.next_run_at != null && j.next_run_at !== ""
+          ? formatTime(
+              typeof j.next_run_at === "number" ? j.next_run_at : Number(j.next_run_at),
+            )
+          : "n/a";
+      card.querySelector(".cron-job-meta-next").textContent = "next-run: " + nextTxt;
+      const cmd = String(j.prompt || "")
+        .trim()
+        .replace(/\s+/g, " ");
+      const hint =
+        cmd.length > 120 ? cmd.slice(0, 120) + "\u2026" : cmd;
+      card.querySelector(".cron-job-hint").textContent = hint || "(no prompt)";
       const id = j.id;
       card.querySelector(".btn-edit").addEventListener("click", () => openCronModalEdit(j));
       card.querySelector(".btn-run").addEventListener("click", async () => {
