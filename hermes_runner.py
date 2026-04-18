@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
+from typing import Any
 
 _PROFILE_RE = re.compile(r"^[a-zA-Z0-9_.-]+$")
 _PROFILE_UPLOAD_SUBDIR = "uploads"
@@ -164,6 +165,12 @@ def config_path() -> Path:
 _toml_cache: dict | None = None
 
 
+def invalidate_config_cache() -> None:
+    """Clear cached config.toml (call after editing UI server config on disk)."""
+    global _toml_cache
+    _toml_cache = None
+
+
 def _merged_config() -> dict:
     global _toml_cache
     if _toml_cache is not None:
@@ -261,6 +268,105 @@ def get_profile_file_names() -> list[str]:
         if _PROFILE_RE.match(n):
             out.append(n)
     return out if out else ["SOUL.md", "config.yaml"]
+
+
+def _default_profile_templates() -> dict[str, str]:
+    """Fallback file bodies when [profile_templates] omits a key."""
+    return {
+        "SOUL.md": "# Agent profile (SOUL)\n\nDescribe this agent's role, tone, and constraints.\n",
+        "config.yaml": (
+            "# Hermes profile configuration\n"
+            "# Add keys your Hermes build expects (model, toolsets, etc.).\n"
+            "model: anthropic/claude-sonnet-4\n"
+        ),
+        ".env": (
+            "# Optional: API keys and env vars for this profile only.\n"
+            "# Example: OPENROUTER_API_KEY=\n"
+        ),
+    }
+
+
+def get_profile_templates() -> dict[str, str]:
+    """
+    Map profile_files basename -> initial file body for new profiles.
+    Reads [profile_templates] from config.toml; missing keys use _default_profile_templates().
+    """
+    cfg = _merged_config()
+    raw = cfg.get("profile_templates")
+    from_file: dict[str, str] = {}
+    if isinstance(raw, dict):
+        for k, v in raw.items():
+            key = str(k).strip()
+            if key and isinstance(v, str):
+                from_file[key] = v
+    defaults = _default_profile_templates()
+    out: dict[str, str] = {}
+    for fname in get_profile_file_names():
+        if fname in from_file and from_file[fname].strip():
+            out[fname] = from_file[fname]
+        else:
+            out[fname] = defaults.get(fname, "")
+    return out
+
+
+def validate_new_profile_name(name: str) -> tuple[bool, str]:
+    """True if name is safe and not an existing profile directory."""
+    s = (name or "").strip()
+    if not s or not _PROFILE_RE.match(s):
+        return False, "invalid profile name"
+    if s in list_profile_names():
+        return False, f"profile already exists: {s}"
+    prof_dir = (_hermes_home() / "profiles" / s).resolve()
+    profiles_root = (_hermes_home() / "profiles").resolve()
+    try:
+        prof_dir.relative_to(profiles_root)
+    except ValueError:
+        return False, "invalid profile path"
+    if prof_dir.exists():
+        return False, "profile path already exists"
+    return True, ""
+
+
+def create_profile_with_templates(name: str) -> dict[str, Any]:
+    """
+    Create HERMES_HOME/profiles/<name>/ and write each profile_files entry from templates.
+    Rolls back (removes directory) if any write fails.
+    """
+    ok, err = validate_new_profile_name(name)
+    if not ok:
+        return {"ok": False, "error": err}
+    profiles_root = (_hermes_home() / "profiles").resolve()
+    profiles_root.mkdir(parents=True, exist_ok=True)
+    prof_dir = (profiles_root / name.strip()).resolve()
+    try:
+        prof_dir.relative_to(profiles_root)
+    except ValueError:
+        return {"ok": False, "error": "invalid profile path"}
+    try:
+        prof_dir.mkdir(parents=False)
+    except FileExistsError:
+        return {"ok": False, "error": "profile already exists"}
+    except OSError as e:
+        return {"ok": False, "error": str(e)}
+    templates = get_profile_templates()
+    files = get_profile_file_names()
+    created: list[str] = []
+    try:
+        for fname in files:
+            text = templates.get(fname, "")
+            if not isinstance(text, str):
+                text = ""
+            target = (prof_dir / fname).resolve()
+            try:
+                target.relative_to(prof_dir)
+            except ValueError:
+                raise ValueError(f"invalid file name: {fname}") from None
+            target.write_text(text, encoding="utf-8")
+            created.append(fname)
+    except Exception as e:
+        shutil.rmtree(prof_dir, ignore_errors=True)
+        return {"ok": False, "error": str(e)}
+    return {"ok": True, "profile": name.strip(), "files": created}
 
 
 def skill_segment_ok(segment: str) -> bool:

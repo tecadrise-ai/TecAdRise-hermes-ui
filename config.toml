@@ -12,10 +12,44 @@ use_quiet = true
 strip_cli_output = true
 
 # Subprocess timeout in seconds (overridden by HERMES_CHAT_TIMEOUT_SEC if set).
-timeout_sec = 600
+timeout_sec = 1000
 
 # Editable files per profile (paths are HERMES_HOME/profiles/<profile>/<name>).
-profile_files = ["SOUL.md", "config.yaml",".env"]
+profile_files = ["SOUL.md", "config.yaml", ".env"]
+
+# Initial content for "+ New" profile (same keys as profile_files). Omitted keys use code defaults.
+[profile_templates]
+"SOUL.md" = """
+# Agent profile (SOUL)
+
+Describe this agent's role, tone, and constraints for Hermes.
+"""
+
+"config.yaml" = """
+# Hermes profile configuration
+# Add keys your Hermes build expects (toolsets, provider overrides, etc.).
+model:
+  default: openrouter/elephant-alpha
+  provider: openrouter
+  base_url: https://openrouter.ai/api/v1
+  api_mode: chat_completions
+"""
+
+".env" = """
+# Optional: API keys and env vars scoped to this profile.
+OPENROUTER_API_KEY=your-key-here
+HERMES_MAX_ITERATIONS=60
+TERMINAL_TIMEOUT=300
+TERMINAL_LIFETIME_SECONDS=600
+BROWSERBASE_PROXIES=true
+BROWSER_SESSION_TIMEOUT=300
+BROWSER_INACTIVITY_TIMEOUT=120
+WEB_TOOLS_DEBUG=false
+VISION_TOOLS_DEBUG=false
+
+# Remote injector port (unique per profile)
+HERMES_REMOTE_INJECT_PORT=1234
+"""
 
 [ui]
 # Shown under the composer (plain text).

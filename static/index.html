@@ -150,7 +150,16 @@
           </p>
           <button
             type="button"
-            class="icon-btn"
+            class="icon-btn pane-right-settings-icon"
+            id="btn-profile-new"
+            title="Create a new Hermes profile under HERMES_HOME/profiles"
+            aria-label="Create new Hermes profile"
+          >
+            <span class="icon-plus-glyph" aria-hidden="true">+</span>
+          </button>
+          <button
+            type="button"
+            class="icon-btn pane-right-settings-icon"
             id="btn-ui-config"
             title="UI server config.toml"
             aria-label="Edit UI server config.toml"
@@ -318,6 +327,36 @@
         <div class="attach-modal-actions">
           <button type="button" class="secondary" id="attach-modal-cancel">Cancel</button>
           <button type="button" id="attach-modal-upload">Upload</button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="profile-create-modal"
+      class="cron-modal-overlay is-hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="profile-create-modal-title"
+      aria-hidden="true"
+    >
+      <div class="cron-modal-panel profile-create-modal-panel">
+        <h2 class="profile-create-modal-title" id="profile-create-modal-title">New Hermes profile</h2>
+        <p class="profile-create-modal-hint">
+          Folder name under <code>profiles/</code> on the server (letters, numbers, dash, underscore).
+        </p>
+        <label class="profile-create-label" for="profile-create-name">Name</label>
+        <input
+          type="text"
+          id="profile-create-name"
+          class="profile-create-input"
+          autocomplete="off"
+          maxlength="120"
+          spellcheck="false"
+        />
+        <p class="profile-create-modal-status" id="profile-create-modal-status" hidden></p>
+        <div class="attach-modal-actions profile-create-modal-actions">
+          <button type="button" class="secondary" id="profile-create-cancel">Cancel</button>
+          <button type="button" id="profile-create-submit">Create</button>
         </div>
       </div>
     </div>

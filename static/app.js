@@ -26,6 +26,7 @@
   const btnProfileFileSave = document.getElementById("profile-file-save");
   const btnProfileFileModalClose = document.getElementById("profile-file-modal-close");
   const btnUiConfig = document.getElementById("btn-ui-config");
+  const btnProfileNew = document.getElementById("btn-profile-new");
   const elSessionSelect = document.getElementById("session-select");
   const elSessionHint = document.getElementById("session-hint");
   const elSkillsCascade = document.getElementById("skills-cascade");
@@ -40,6 +41,11 @@
   const elAttachModalStatus = document.getElementById("attach-modal-status");
   const btnAttachModalCancel = document.getElementById("attach-modal-cancel");
   const btnAttachModalUpload = document.getElementById("attach-modal-upload");
+  const elProfileCreateModal = document.getElementById("profile-create-modal");
+  const elProfileCreateName = document.getElementById("profile-create-name");
+  const elProfileCreateStatus = document.getElementById("profile-create-modal-status");
+  const btnProfileCreateCancel = document.getElementById("profile-create-cancel");
+  const btnProfileCreateSubmit = document.getElementById("profile-create-submit");
 
   /** Same default as AgentChat (cursor-agent-chat). */
   const DEFAULT_SCHEDULE = "interval:15m";
@@ -667,6 +673,32 @@
 
   function isAttachModalOpen() {
     return elAttachModal && !elAttachModal.classList.contains("is-hidden");
+  }
+
+  function isProfileCreateModalOpen() {
+    return elProfileCreateModal && !elProfileCreateModal.classList.contains("is-hidden");
+  }
+
+  function openProfileCreateModal() {
+    if (!elProfileCreateModal) return;
+    if (elProfileCreateName) elProfileCreateName.value = "";
+    if (elProfileCreateStatus) {
+      elProfileCreateStatus.textContent = "";
+      elProfileCreateStatus.hidden = true;
+    }
+    elProfileCreateModal.classList.remove("is-hidden");
+    elProfileCreateModal.setAttribute("aria-hidden", "false");
+    elProfileCreateName?.focus();
+  }
+
+  function closeProfileCreateModal() {
+    if (!elProfileCreateModal) return;
+    elProfileCreateModal.classList.add("is-hidden");
+    elProfileCreateModal.setAttribute("aria-hidden", "true");
+    if (elProfileCreateStatus) {
+      elProfileCreateStatus.textContent = "";
+      elProfileCreateStatus.hidden = true;
+    }
   }
 
   function closeAttachModal() {
@@ -1584,6 +1616,13 @@
     });
   }
 
+  if (elProfileCreateModal) {
+    elProfileCreateModal.addEventListener("mousedown", (ev) => {
+      if (ev.button !== 0) return;
+      if (ev.target === elProfileCreateModal) closeProfileCreateModal();
+    });
+  }
+
   btnComposerAttach?.addEventListener("click", () => {
     if (btnComposerAttach.disabled) return;
     elComposerFileInput?.click();
@@ -1603,6 +1642,17 @@
   if (btnUiConfig) {
     btnUiConfig.addEventListener("click", () => void openUiConfigModal());
   }
+  if (btnProfileNew) {
+    btnProfileNew.addEventListener("click", () => openProfileCreateModal());
+  }
+  btnProfileCreateCancel?.addEventListener("click", () => closeProfileCreateModal());
+  btnProfileCreateSubmit?.addEventListener("click", () => void submitProfileCreate());
+  elProfileCreateName?.addEventListener("keydown", (ev) => {
+    if (ev.key === "Enter") {
+      ev.preventDefault();
+      void submitProfileCreate();
+    }
+  });
 
   document.addEventListener("keydown", (ev) => {
     if (ev.key !== "Escape") return;
@@ -1614,6 +1664,11 @@
     if (isAttachModalOpen()) {
       ev.preventDefault();
       closeAttachModal();
+      return;
+    }
+    if (isProfileCreateModalOpen()) {
+      ev.preventDefault();
+      closeProfileCreateModal();
       return;
     }
     if (isProfileFileModalOpen()) {
@@ -1699,7 +1754,7 @@
     }, 5000);
   }
 
-  async function loadProfiles() {
+  async function loadProfiles(preferProfile) {
     const r = await fetch("/api/profiles");
     if (!r.ok) throw new Error("profiles " + r.status);
     const data = await r.json();
@@ -1725,8 +1780,55 @@
     state.profiles = profiles;
     buildTabs(profiles);
     await Promise.all(profiles.map((p) => fetchHistory(p)));
-    if (profiles.length) await setActiveProfile(profiles[0]);
+    let pick = profiles[0];
+    const want = preferProfile != null ? String(preferProfile).trim() : "";
+    if (want && profiles.includes(want)) pick = want;
+    if (profiles.length) await setActiveProfile(pick);
     fillCronProfileSelect();
+  }
+
+  async function submitProfileCreate() {
+    const name = elProfileCreateName ? String(elProfileCreateName.value || "").trim() : "";
+    if (!name) {
+      if (elProfileCreateStatus) {
+        elProfileCreateStatus.textContent = "Enter a profile name.";
+        elProfileCreateStatus.hidden = false;
+      }
+      return;
+    }
+    if (elProfileCreateStatus) {
+      elProfileCreateStatus.textContent = "";
+      elProfileCreateStatus.hidden = true;
+    }
+    if (btnProfileCreateSubmit) btnProfileCreateSubmit.disabled = true;
+    if (btnProfileNew) btnProfileNew.disabled = true;
+    try {
+      const r = await fetch("/api/profile-create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        const msg = formatApiDetail(data, r.statusText || "Could not create profile.");
+        if (elProfileCreateStatus) {
+          elProfileCreateStatus.textContent = msg;
+          elProfileCreateStatus.hidden = false;
+        }
+        return;
+      }
+      closeProfileCreateModal();
+      const created = data.profile != null ? String(data.profile).trim() : name;
+      await loadProfiles(created || name);
+    } catch (e) {
+      if (elProfileCreateStatus) {
+        elProfileCreateStatus.textContent = String(e);
+        elProfileCreateStatus.hidden = false;
+      }
+    } finally {
+      if (btnProfileCreateSubmit) btnProfileCreateSubmit.disabled = false;
+      if (btnProfileNew) btnProfileNew.disabled = false;
+    }
   }
 
   async function send() {

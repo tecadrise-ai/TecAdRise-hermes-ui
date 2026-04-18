@@ -103,6 +103,10 @@ class UiConfigWrite(BaseModel):
     content: str = Field(default="", max_length=2_000_000)
 
 
+class ProfileCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=120)
+
+
 def _profile_file_get_json(profile: str, filename: str) -> dict:
     allowed = set(hermes_runner.get_profile_file_names())
     if filename not in allowed:
@@ -210,6 +214,18 @@ def api_scheduler_status_top():
     return cron_service.scheduler_status()
 
 
+@app.post("/api/profile-create")
+def api_profile_create(body: ProfileCreate):
+    """Create HERMES_HOME/profiles/<name>/ with profile_files from [profile_templates] in config.toml."""
+    result = hermes_runner.create_profile_with_templates(body.name.strip())
+    if not result.get("ok"):
+        msg = str(result.get("error") or "create failed")
+        low = msg.lower()
+        code = 409 if "already exists" in low or "path already" in low else 400
+        raise HTTPException(code, msg)
+    return {"ok": True, "profile": result["profile"], "files": result.get("files") or []}
+
+
 @app.get("/api/profiles")
 def api_profiles(
     sessions_profile: str | None = Query(
@@ -310,6 +326,7 @@ def _ui_config_write_do(content: str) -> dict:
     path = UI_CONFIG_PATH
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
+    hermes_runner.invalidate_config_cache()
     return {"ok": True, "path": str(path)}
 
 
